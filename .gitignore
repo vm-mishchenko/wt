@@ -1,0 +1,9 @@
+.idea
+__pycache__
+*.egg-info
+.venv
+.pytest_cache
+.ruff_cache
+.draft
+build
+dist

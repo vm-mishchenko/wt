@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools >= 68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wt"
+version = "0.1.0"
+description = "Thin git-worktree wrapper that puts worktrees in a predictable location and surfaces broken ones"
+requires-python = ">= 3.12"
+authors = [{name = "Vitalii Mishchenko"}]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff>=0.6,<1"]
+
+[project.scripts]
+wt = "wt.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+extend-exclude = [".venv", "build", "dist", "*.egg-info", "__pycache__"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]
