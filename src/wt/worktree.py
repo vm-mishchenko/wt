@@ -81,6 +81,8 @@ def worktree_branches():
     current_path = None
     current_branch = None
     current_prunable = False
+    current_locked = False
+    current_lock_reason = ""
 
     def flush():
         if (
@@ -92,6 +94,8 @@ def worktree_branches():
             entries[current_branch] = {
                 "path": current_path,
                 "exists": exists,
+                "locked": current_locked,
+                "lock_reason": current_lock_reason,
             }
 
     for line in porcelain.splitlines():
@@ -100,10 +104,15 @@ def worktree_branches():
             current_path = line[len("worktree "):]
             current_branch = None
             current_prunable = False
+            current_locked = False
+            current_lock_reason = ""
         elif line.startswith("branch refs/heads/"):
             current_branch = line[len("branch refs/heads/"):]
         elif line.startswith("prunable"):
             current_prunable = True
+        elif line == "locked" or line.startswith("locked "):
+            current_locked = True
+            current_lock_reason = line[len("locked "):].strip() if line.startswith("locked ") else ""
     flush()
 
     return entries
@@ -313,6 +322,11 @@ def delete_worktree(branch, delete_branch=False):
     if answer.strip().lower() != "y":
         print("Aborted")
         return
+
+    if info.get("locked"):
+        reason = info.get("lock_reason") or "(no reason given)"
+        print(f"{YELLOW}Worktree is locked ({reason}); unlocking...{NC}")
+        run(["git", "worktree", "unlock", path], cwd=repo_root, stream=True)
 
     print(f"{YELLOW}Deleting worktree at {path}...{NC}")
     run(["git", "worktree", "remove", path], cwd=repo_root, stream=True)
