@@ -13,31 +13,13 @@ wt create my-feature
 - [Commands](#commands)
 - [Layout](#layout)
 
-## Requirements
-
-- Python 3.12+
-- `git` on `PATH`
-- macOS `open` and the Cursor app (only required for `wt open`)
-
 ## Install
 
-- Clone and `cd` into the repo
-- Run `make setup` and put the venv on your PATH (the command prints where it is)
-- Nuclear option: `make clean && make setup`
-
-```shell
-git clone <this-repo> wt
-cd wt
-make setup
+```
+pipx install git+https://github.com/vm-mishchenko/wt.git
 ```
 
-`make setup` creates a `.venv` and installs `wt` in editable mode with dev dependencies. It then prints the line to append to your shell config:
-
-```shell
-export PATH="<absolute-path-to-repo>/.venv/bin:$PATH"
-```
-
-Reload the shell (`source ~/.zshrc`) and `wt` is on your `PATH`.
+## Make
 
 Other targets:
 
