@@ -194,6 +194,21 @@ class TestWorktree(unittest.TestCase):
         open_worktree(TEST_BRANCH)
 
         called = [c[0][0] for c in mock_run.call_args_list]
+        self.assertIn(["open", "-a", "Visual Studio Code", WT_PATH], called)
+
+    @patch("os.path.exists", return_value=True)
+    def test_open_cursor(self, _exists, mock_run, _repo_root, _repo_name):
+        def side_effect(cmd, cwd=None, stream=False):
+            if cmd == ["git", "worktree", "list", "--porcelain"]:
+                return porcelain_with_branch(TEST_BRANCH, WT_PATH)
+            if cmd == GIT_COMMON_DIR_CMD:
+                return MAIN_GIT_COMMON_DIR
+            return ""
+
+        mock_run.side_effect = side_effect
+        open_worktree(TEST_BRANCH, editor="cursor")
+
+        called = [c[0][0] for c in mock_run.call_args_list]
         self.assertIn(["open", "-a", "Cursor", WT_PATH], called)
 
     @patch("sys.stdout", new_callable=StringIO)
@@ -210,7 +225,7 @@ class TestWorktree(unittest.TestCase):
         open_worktree(TEST_BRANCH)
 
         called = [c[0][0] for c in mock_run.call_args_list]
-        self.assertNotIn(["open", "-a", "Cursor", WT_PATH], called)
+        self.assertNotIn(["open", "-a", "Visual Studio Code", WT_PATH], called)
         self.assertIn("wt create", mock_stdout.getvalue())
 
     @patch("sys.stderr", new_callable=StringIO)

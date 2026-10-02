@@ -27,11 +27,20 @@ def main():
     create_parser.add_argument("--from", dest="from_branch", help="Base branch to create the new branch from (overrides main/master default)")
 
     open_parser = subparsers.add_parser("open",
-        help="Open existing worktree in Cursor",
+        help="Open existing worktree in an editor (VS Code by default)",
         formatter_class=FMT,
-        description="Open existing worktree in Cursor.",
-        epilog="examples:\n  wt open my-feature")
+        description="Open existing worktree in an editor (VS Code by default).",
+        epilog="examples:\n"
+               "  wt open my-feature                 open in VS Code (default)\n"
+               "  wt open --vscode my-feature        open in VS Code\n"
+               "  wt open --cursor my-feature        open in Cursor")
     open_parser.add_argument("branch", help="Branch name of the worktree to open")
+    editor_group = open_parser.add_mutually_exclusive_group()
+    editor_group.add_argument("--vscode", dest="editor", action="store_const", const="vscode",
+                              help="Open in VS Code (default)")
+    editor_group.add_argument("--cursor", dest="editor", action="store_const", const="cursor",
+                              help="Open in Cursor")
+    open_parser.set_defaults(editor="vscode")
 
     delete_parser = subparsers.add_parser("delete",
         help="Delete worktree, keep the branch",
@@ -74,7 +83,7 @@ def main():
     elif args.command == "create":
         create_worktree(args.branch, args.from_branch)
     elif args.command == "open":
-        open_worktree(args.branch)
+        open_worktree(args.branch, editor=args.editor)
     elif args.command == "delete":
         delete_worktree(args.branch, args.delete_branch)
     elif args.command == "status":

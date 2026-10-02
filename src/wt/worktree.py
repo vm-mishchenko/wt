@@ -200,7 +200,9 @@ def create_worktree(branch, from_branch=None):
     print(f"Worktree created at {path}")
 
 
-def open_worktree(branch):
+def open_worktree(branch, editor="vscode"):
+    apps = {"vscode": "Visual Studio Code", "cursor": "Cursor"}
+    app = apps.get(editor, apps["vscode"])
     info = worktree_branches().get(branch)
     if info is None:
         print(f"{YELLOW}No worktree for branch '{branch}'{NC}")
@@ -211,8 +213,8 @@ def open_worktree(branch):
         print(f"{RED}Error: git tracks a worktree at {path} but the directory is missing{NC}", file=sys.stderr)
         print(f"Hint: prune it with: git worktree prune", file=sys.stderr)
         sys.exit(1)
-    run(["open", "-a", "Cursor", path])
-    print(f"Opened Cursor at {path}")
+    run(["open", "-a", app, path])
+    print(f"Opened {app} at {path}")
 
 
 def status_worktree(branch=None):

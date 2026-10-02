@@ -32,7 +32,7 @@ Other targets:
 - `wt` — list all branches, mark the ones that have a worktree
 - `wt list` — same as bare `wt`
 - `wt create` — create a worktree at `~/.wt/<project>/<branch>`
-- `wt open` — open an existing worktree in Cursor
+- `wt open` — open an existing worktree in an editor (VS Code by default, `--cursor` for Cursor)
 - `wt status` — show git-tracking and on-disk state for one worktree
 - `wt discard` — discard uncommitted changes in a worktree
 - `wt delete` — remove a worktree, optionally drop the branch too
@@ -65,15 +65,19 @@ Fails if the target directory already exists, if `--from` is combined with an ex
 
 ### wt open
 
-Open the branch's worktree in Cursor. Looks the path up from `git worktree list`, so it works regardless of where the worktree lives on disk.
+Open the branch's worktree in an editor. Looks the path up from `git worktree list`, so it works regardless of where the worktree lives on disk.
 
 ```
-wt open my-feature
+wt open my-feature              open in VS Code (default)
+wt open --vscode my-feature     open in VS Code
+wt open --cursor my-feature     open in Cursor
 ```
 
 Arguments
 
 - `branch` — branch name of the worktree to open (required)
+- `--vscode` — open in VS Code (default)
+- `--cursor` — open in Cursor (mutually exclusive with `--vscode`)
 
 Errors when git tracks a worktree for the branch but the directory is missing on disk; the hint suggests `git worktree prune`.
 
