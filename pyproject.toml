@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wt"
-version = "0.1.0"
+version = "0.2.0"
 description = "Thin git-worktree wrapper that puts worktrees in a predictable location and surfaces broken ones"
 requires-python = ">= 3.12"
 authors = [{name = "Vitalii Mishchenko"}]
