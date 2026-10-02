@@ -15,9 +15,12 @@ wt create my-feature
 
 ## Install
 
-```
+```shell
+pipx install --editable .
+# or
 pipx install git+https://github.com/vm-mishchenko/wt.git
 ```
+
 
 ## Make
 
