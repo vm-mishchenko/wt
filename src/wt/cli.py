@@ -1,7 +1,16 @@
 import argparse
 import sys
 
-from .worktree import create_worktree, delete_worktree, discard_worktree, list_worktrees, open_worktree, show_branches, status_worktree
+from .config import NotARepoError
+from .worktree import (
+    create_worktree,
+    delete_worktree,
+    discard_worktree,
+    list_worktrees,
+    open_worktree,
+    show_branches,
+    status_worktree,
+)
 
 
 def main():
@@ -74,6 +83,14 @@ def main():
 
     args = parser.parse_args()
 
+    try:
+        _run_command(args)
+    except NotARepoError:
+        print("error: not inside a git repository", file=sys.stderr)
+        sys.exit(1)
+
+
+def _run_command(args):
     if args.command is None:
         show_branches()
         return

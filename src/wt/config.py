@@ -1,6 +1,22 @@
 import subprocess
 from pathlib import Path
 
+
+class NotARepoError(Exception):
+    pass
+
+
+def _run_git(*args):
+    result = subprocess.run(
+        ["git", *args],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise NotARepoError("not inside a git repository")
+    return result.stdout.strip()
+
 WORKTREE_BASE_DIR = Path.home() / ".wt"
 
 # Fallback base branch for projects not listed in PROJECTS
@@ -15,22 +31,14 @@ PROJECTS = {
 
 
 def get_main_repo_name():
-    result = subprocess.run(
-        ["git", "rev-parse", "--git-common-dir"],
-        capture_output=True, text=True, check=True,
-    )
-    git_common_dir = Path(result.stdout.strip()).resolve()
+    git_common_dir = Path(_run_git("rev-parse", "--git-common-dir")).resolve()
     if git_common_dir.name == ".git":
         return git_common_dir.parent.name
     return git_common_dir.parent.parent.name
 
 
 def get_repo_root():
-    result = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        capture_output=True, text=True, check=True,
-    )
-    return result.stdout.strip()
+    return _run_git("rev-parse", "--show-toplevel")
 
 
 def get_project_config():
