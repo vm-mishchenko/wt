@@ -6,7 +6,6 @@ from .worktree import (
     create_worktree,
     delete_worktree,
     discard_worktree,
-    list_worktrees,
     open_worktree,
     show_branches,
     status_worktree,
@@ -19,69 +18,115 @@ def main():
 
     FMT = argparse.RawDescriptionHelpFormatter
 
-    subparsers.add_parser("list", help="Show all worktrees (flat list)",
-                          formatter_class=FMT,
-                          description="Show all worktrees (flat list).",
-                          epilog="examples:\n  wt list")
+    subparsers.add_parser(
+        "list",
+        help="Show all worktrees (flat list)",
+        formatter_class=FMT,
+        description="Show all worktrees (flat list).",
+        epilog="examples:\n  wt list",
+    )
 
-    create_parser = subparsers.add_parser("create",
+    create_parser = subparsers.add_parser(
+        "create",
         help="Create worktree with new branch from main/master (or reuse existing branch)",
         formatter_class=FMT,
         description="Create worktree with new branch from main or master (whichever exists), or reuse an existing branch.",
         epilog="examples:\n"
-               "  wt create my-feature                  new branch from main or master\n"
-               "  wt create my-feature --from develop    new branch from specific base branch\n"
-               "  wt create existing-branch              reuse existing local branch")
+        "  wt create my-feature                  new branch from main or master\n"
+        "  wt create my-feature --from develop    new branch from specific base branch\n"
+        "  wt create existing-branch              reuse existing local branch",
+    )
     create_parser.add_argument("branch", help="Branch name for the worktree")
-    create_parser.add_argument("--from", dest="from_branch", help="Base branch to create the new branch from (overrides main/master default)")
+    create_parser.add_argument(
+        "--from",
+        dest="from_branch",
+        help="Base branch to create the new branch from (overrides main/master default)",
+    )
 
-    open_parser = subparsers.add_parser("open",
+    open_parser = subparsers.add_parser(
+        "open",
         help="Open existing worktree in an editor (VS Code by default)",
         formatter_class=FMT,
         description="Open existing worktree in an editor (VS Code by default).",
         epilog="examples:\n"
-               "  wt open my-feature                 open in VS Code (default)\n"
-               "  wt open --vscode my-feature        open in VS Code\n"
-               "  wt open --cursor my-feature        open in Cursor")
+        "  wt open my-feature                 open in VS Code (default)\n"
+        "  wt open --vscode my-feature        open in VS Code\n"
+        "  wt open --cursor my-feature        open in Cursor",
+    )
     open_parser.add_argument("branch", help="Branch name of the worktree to open")
     editor_group = open_parser.add_mutually_exclusive_group()
-    editor_group.add_argument("--vscode", dest="editor", action="store_const", const="vscode",
-                              help="Open in VS Code (default)")
-    editor_group.add_argument("--cursor", dest="editor", action="store_const", const="cursor",
-                              help="Open in Cursor")
+    editor_group.add_argument(
+        "--vscode",
+        dest="editor",
+        action="store_const",
+        const="vscode",
+        help="Open in VS Code (default)",
+    )
+    editor_group.add_argument(
+        "--cursor",
+        dest="editor",
+        action="store_const",
+        const="cursor",
+        help="Open in Cursor",
+    )
     open_parser.set_defaults(editor="vscode")
 
-    delete_parser = subparsers.add_parser("delete",
+    delete_parser = subparsers.add_parser(
+        "delete",
         help="Delete worktree, keep the branch",
         formatter_class=FMT,
         description="Delete worktree, keep the branch by default.",
         epilog="examples:\n"
-               "  wt delete my-feature                  delete worktree, keep branch\n"
-               "  wt delete my-feature --branch          delete worktree and branch\n"
-               "  wt delete my-feature --force           skip uncommitted-changes check")
+        "  wt delete my-feature                  delete worktree, keep branch\n"
+        "  wt delete my-feature --branch          delete worktree and branch\n"
+        "  wt delete my-feature --force           skip uncommitted-changes check",
+    )
     delete_parser.add_argument("branch", help="Branch name of the worktree to delete")
-    delete_parser.add_argument("--branch", "-b", dest="delete_branch", action="store_true", help="Also delete the branch")
-    delete_parser.add_argument("--force", "-f", action="store_true", help="Delete even if there are uncommitted changes")
+    delete_parser.add_argument(
+        "--branch",
+        "-b",
+        dest="delete_branch",
+        action="store_true",
+        help="Also delete the branch",
+    )
+    delete_parser.add_argument(
+        "--force",
+        "-f",
+        action="store_true",
+        help="Delete even if there are uncommitted changes",
+    )
 
-    status_parser = subparsers.add_parser("status",
+    status_parser = subparsers.add_parser(
+        "status",
         help="Show worktree status (uncommitted changes, your commits)",
         formatter_class=FMT,
         description="Show worktree status for the current branch or a specific branch.",
         epilog="examples:\n"
-               "  wt status                  status of current branch\n"
-               "  wt status my-feature       status of specific branch")
-    status_parser.add_argument("branch", nargs="?", default=None,
-                               help="Branch name (defaults to current branch)")
+        "  wt status                  status of current branch\n"
+        "  wt status my-feature       status of specific branch",
+    )
+    status_parser.add_argument(
+        "branch",
+        nargs="?",
+        default=None,
+        help="Branch name (defaults to current branch)",
+    )
 
-    discard_parser = subparsers.add_parser("discard",
+    discard_parser = subparsers.add_parser(
+        "discard",
         help="Discard all uncommitted changes in current worktree",
         formatter_class=FMT,
         description="Discard all uncommitted changes in current worktree or a specific branch worktree.",
         epilog="examples:\n"
-               "  wt discard                 discard in current worktree\n"
-               "  wt discard my-feature      discard in specific branch worktree")
-    discard_parser.add_argument("branch", nargs="?", default=None,
-                                help="Branch name (defaults to current worktree)")
+        "  wt discard                 discard in current worktree\n"
+        "  wt discard my-feature      discard in specific branch worktree",
+    )
+    discard_parser.add_argument(
+        "branch",
+        nargs="?",
+        default=None,
+        help="Branch name (defaults to current worktree)",
+    )
 
     args = parser.parse_args()
 

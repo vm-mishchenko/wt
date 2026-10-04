@@ -17,12 +17,13 @@ def run(cmd, cwd=None, stream=False):
             raise RuntimeError(f"Command failed: {' '.join(cmd)}")
         return ""
     result = subprocess.run(
-        cmd, capture_output=True, text=True, cwd=cwd,
+        cmd,
+        capture_output=True,
+        text=True,
+        cwd=cwd,
     )
     if result.returncode != 0:
-        raise RuntimeError(
-            f"Command failed: {' '.join(cmd)}\n{result.stderr.strip()}"
-        )
+        raise RuntimeError(f"Command failed: {' '.join(cmd)}\n{result.stderr.strip()}")
     return result.stdout.strip()
 
 
@@ -36,7 +37,10 @@ def resolve_default_base_branch(repo_root):
         output = run(["git", "branch", "--list", candidate], cwd=repo_root)
         if output.strip():
             return candidate
-    print(f"{RED}Error: neither 'main' nor 'master' branch exists locally{NC}", file=sys.stderr)
+    print(
+        f"{RED}Error: neither 'main' nor 'master' branch exists locally{NC}",
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 
@@ -52,10 +56,12 @@ def branch_checked_out_path(branch):
     current_path = None
     for line in porcelain.splitlines():
         if line.startswith("worktree "):
-            current_path = line[len("worktree "):]
-        elif line.startswith("branch refs/heads/"):
-            if line[len("branch refs/heads/"):] == branch:
-                return current_path
+            current_path = line[len("worktree ") :]
+        elif (
+            line.startswith("branch refs/heads/")
+            and line[len("branch refs/heads/") :] == branch
+        ):
+            return current_path
     return None
 
 
@@ -101,18 +107,20 @@ def worktree_branches():
     for line in porcelain.splitlines():
         if line.startswith("worktree "):
             flush()
-            current_path = line[len("worktree "):]
+            current_path = line[len("worktree ") :]
             current_branch = None
             current_prunable = False
             current_locked = False
             current_lock_reason = ""
         elif line.startswith("branch refs/heads/"):
-            current_branch = line[len("branch refs/heads/"):]
+            current_branch = line[len("branch refs/heads/") :]
         elif line.startswith("prunable"):
             current_prunable = True
         elif line == "locked" or line.startswith("locked "):
             current_locked = True
-            current_lock_reason = line[len("locked "):].strip() if line.startswith("locked ") else ""
+            current_lock_reason = (
+                line[len("locked ") :].strip() if line.startswith("locked ") else ""
+            )
     flush()
 
     return entries
@@ -171,31 +179,51 @@ def create_worktree(branch, from_branch=None):
     path = str(worktree_path(branch))
 
     if os.path.exists(path):
-        print(f"{RED}Error: worktree directory already exists: {path}{NC}", file=sys.stderr)
+        print(
+            f"{RED}Error: worktree directory already exists: {path}{NC}",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     exists = branch_exists_locally(branch)
 
     if from_branch is not None:
         if exists:
-            print(f"{RED}Error: branch '{branch}' already exists locally (cannot use --from with existing branch){NC}", file=sys.stderr)
+            print(
+                f"{RED}Error: branch '{branch}' already exists locally (cannot use --from with existing branch){NC}",
+                file=sys.stderr,
+            )
             sys.exit(1)
         if not branch_exists_locally(from_branch):
-            print(f"{RED}Error: base branch '{from_branch}' does not exist locally{NC}", file=sys.stderr)
+            print(
+                f"{RED}Error: base branch '{from_branch}' does not exist locally{NC}",
+                file=sys.stderr,
+            )
             sys.exit(1)
         print(f"{YELLOW}Creating branch '{branch}' from '{from_branch}'...{NC}")
-        run(["git", "worktree", "add", "-b", branch, path, from_branch], cwd=repo_root, stream=True)
+        run(
+            ["git", "worktree", "add", "-b", branch, path, from_branch],
+            cwd=repo_root,
+            stream=True,
+        )
     elif exists:
         existing_path = branch_checked_out_path(branch)
         if existing_path:
-            print(f"{RED}Error: branch '{branch}' is already checked out at {existing_path}{NC}", file=sys.stderr)
+            print(
+                f"{RED}Error: branch '{branch}' is already checked out at {existing_path}{NC}",
+                file=sys.stderr,
+            )
             sys.exit(1)
         print(f"{YELLOW}Reusing existing branch '{branch}'...{NC}")
         run(["git", "worktree", "add", path, branch], cwd=repo_root, stream=True)
     else:
         base = resolve_default_base_branch(repo_root)
         print(f"{YELLOW}Creating branch '{branch}' from '{base}'...{NC}")
-        run(["git", "worktree", "add", "-b", branch, path, base], cwd=repo_root, stream=True)
+        run(
+            ["git", "worktree", "add", "-b", branch, path, base],
+            cwd=repo_root,
+            stream=True,
+        )
 
     print(f"Worktree created at {path}")
 
@@ -210,8 +238,11 @@ def open_worktree(branch, editor="vscode"):
         return
     path = info["path"]
     if not info["exists"]:
-        print(f"{RED}Error: git tracks a worktree at {path} but the directory is missing{NC}", file=sys.stderr)
-        print(f"Hint: prune it with: git worktree prune", file=sys.stderr)
+        print(
+            f"{RED}Error: git tracks a worktree at {path} but the directory is missing{NC}",
+            file=sys.stderr,
+        )
+        print("Hint: prune it with: git worktree prune", file=sys.stderr)
         sys.exit(1)
     run(["open", "-a", app, path])
     print(f"Opened {app} at {path}")
@@ -227,10 +258,18 @@ def status_worktree(branch=None):
     path = info["path"] if info else None
     dir_exists = bool(info and info["exists"])
 
-    print(f"Git-tracked worktree: true" if git_tracked else f"Git-tracked worktree: {YELLOW}false{NC}")
+    print(
+        "Git-tracked worktree: true"
+        if git_tracked
+        else f"Git-tracked worktree: {YELLOW}false{NC}"
+    )
     if git_tracked:
         print(f"Worktree path: {path}")
-        print(f"Worktree dir exists: true" if dir_exists else f"Worktree dir exists: {RED}false{NC}")
+        print(
+            "Worktree dir exists: true"
+            if dir_exists
+            else f"Worktree dir exists: {RED}false{NC}"
+        )
     print(f"Branch: {branch}")
 
     if not git_tracked:
@@ -238,7 +277,7 @@ def status_worktree(branch=None):
         return
 
     if not dir_exists:
-        print(f"Hint: prune it with: git worktree prune")
+        print("Hint: prune it with: git worktree prune")
         return
 
     status = run(["git", "status", "--porcelain"], cwd=path)
@@ -257,7 +296,10 @@ def discard_worktree(branch=None):
             print(f"Hint: create it with: wt create {branch}", file=sys.stderr)
             sys.exit(1)
         if not info["exists"]:
-            print(f"{RED}Error: git tracks a worktree at {info['path']} but the directory is missing{NC}", file=sys.stderr)
+            print(
+                f"{RED}Error: git tracks a worktree at {info['path']} but the directory is missing{NC}",
+                file=sys.stderr,
+            )
             sys.exit(1)
         cwd = info["path"]
     else:
@@ -265,7 +307,10 @@ def discard_worktree(branch=None):
         git_common_dir = run(["git", "rev-parse", "--git-common-dir"], cwd=cwd)
         git_dir = run(["git", "rev-parse", "--git-dir"], cwd=cwd)
         if os.path.realpath(git_common_dir) == os.path.realpath(git_dir):
-            print(f"{RED}Error: not inside a worktree (use: wt discard <branch>){NC}", file=sys.stderr)
+            print(
+                f"{RED}Error: not inside a worktree (use: wt discard <branch>){NC}",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
     status = run(["git", "status", "--porcelain"], cwd=cwd)
@@ -274,8 +319,8 @@ def discard_worktree(branch=None):
         return
 
     lines = status.splitlines()
-    modified = sum(1 for l in lines if not l.startswith("??"))
-    untracked = sum(1 for l in lines if l.startswith("??"))
+    modified = sum(1 for line in lines if not line.startswith("??"))
+    untracked = sum(1 for line in lines if line.startswith("??"))
 
     print(f"{YELLOW}Will discard:{NC}")
     print(status)
@@ -301,7 +346,9 @@ def delete_worktree(branch, delete_branch=False, force=False):
     path = info["path"]
 
     if os.getcwd().startswith(path):
-        print(f"{RED}Error: cannot delete worktree while inside it{NC}", file=sys.stderr)
+        print(
+            f"{RED}Error: cannot delete worktree while inside it{NC}", file=sys.stderr
+        )
         sys.exit(1)
 
     if info["exists"] and not force:
@@ -309,7 +356,9 @@ def delete_worktree(branch, delete_branch=False, force=False):
         try:
             status = run(["git", "status", "--porcelain"], cwd=path)
             if status:
-                print(f"{RED}Error: uncommitted changes in worktree:{NC}", file=sys.stderr)
+                print(
+                    f"{RED}Error: uncommitted changes in worktree:{NC}", file=sys.stderr
+                )
                 print(status, file=sys.stderr)
                 print(f"\nDiscard first with: wt discard {branch}", file=sys.stderr)
                 sys.exit(1)

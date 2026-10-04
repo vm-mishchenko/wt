@@ -37,7 +37,6 @@ def porcelain_with_branch(branch, path):
 @patch("wt.worktree.get_repo_root", return_value=REPO_ROOT)
 @patch("wt.worktree.run")
 class TestWorktree(unittest.TestCase):
-
     @patch("os.path.exists", return_value=True)
     @patch("sys.stdout", new_callable=StringIO)
     def test_list(self, mock_stdout, _exists, mock_run, _repo_root, _repo_name):
@@ -75,7 +74,9 @@ class TestWorktree(unittest.TestCase):
         self.assertIn("(missing)", lines[2])
 
     @patch("os.path.exists", return_value=False)
-    def test_create_new_branch_from_main(self, _exists, mock_run, _repo_root, _repo_name):
+    def test_create_new_branch_from_main(
+        self, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "branch", "--list", "main"]:
                 return "  main"
@@ -87,12 +88,18 @@ class TestWorktree(unittest.TestCase):
         expected = [
             call(["git", "branch", "--list", TEST_BRANCH], cwd=REPO_ROOT),
             call(["git", "branch", "--list", "main"], cwd=REPO_ROOT),
-            call(["git", "worktree", "add", "-b", TEST_BRANCH, WT_PATH, "main"], cwd=REPO_ROOT, stream=True),
+            call(
+                ["git", "worktree", "add", "-b", TEST_BRANCH, WT_PATH, "main"],
+                cwd=REPO_ROOT,
+                stream=True,
+            ),
         ]
         self.assertEqual(mock_run.call_args_list, expected)
 
     @patch("os.path.exists", return_value=False)
-    def test_create_new_branch_from_master_fallback(self, _exists, mock_run, _repo_root, _repo_name):
+    def test_create_new_branch_from_master_fallback(
+        self, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "branch", "--list", "main"]:
                 return ""
@@ -107,13 +114,19 @@ class TestWorktree(unittest.TestCase):
             call(["git", "branch", "--list", TEST_BRANCH], cwd=REPO_ROOT),
             call(["git", "branch", "--list", "main"], cwd=REPO_ROOT),
             call(["git", "branch", "--list", "master"], cwd=REPO_ROOT),
-            call(["git", "worktree", "add", "-b", TEST_BRANCH, WT_PATH, "master"], cwd=REPO_ROOT, stream=True),
+            call(
+                ["git", "worktree", "add", "-b", TEST_BRANCH, WT_PATH, "master"],
+                cwd=REPO_ROOT,
+                stream=True,
+            ),
         ]
         self.assertEqual(mock_run.call_args_list, expected)
 
     @patch("sys.stderr", new_callable=StringIO)
     @patch("os.path.exists", return_value=False)
-    def test_create_new_branch_no_default_branch_errors(self, _exists, mock_stderr, mock_run, _repo_root, _repo_name):
+    def test_create_new_branch_no_default_branch_errors(
+        self, _exists, mock_stderr, mock_run, _repo_root, _repo_name
+    ):
         mock_run.return_value = ""
 
         with self.assertRaises(SystemExit) as ctx:
@@ -123,7 +136,9 @@ class TestWorktree(unittest.TestCase):
         self.assertIn("neither 'main' nor 'master'", mock_stderr.getvalue())
 
     @patch("os.path.exists", return_value=False)
-    def test_create_new_branch_from_base(self, _exists, mock_run, _repo_root, _repo_name):
+    def test_create_new_branch_from_base(
+        self, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "branch", "--list", "feature/base"]:
                 return "  feature/base"
@@ -135,12 +150,18 @@ class TestWorktree(unittest.TestCase):
         expected = [
             call(["git", "branch", "--list", TEST_BRANCH], cwd=REPO_ROOT),
             call(["git", "branch", "--list", "feature/base"], cwd=REPO_ROOT),
-            call(["git", "worktree", "add", "-b", TEST_BRANCH, WT_PATH, "feature/base"], cwd=REPO_ROOT, stream=True),
+            call(
+                ["git", "worktree", "add", "-b", TEST_BRANCH, WT_PATH, "feature/base"],
+                cwd=REPO_ROOT,
+                stream=True,
+            ),
         ]
         self.assertEqual(mock_run.call_args_list, expected)
 
     @patch("os.path.exists", return_value=False)
-    def test_create_reuse_existing_branch(self, _exists, mock_run, _repo_root, _repo_name):
+    def test_create_reuse_existing_branch(
+        self, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "branch", "--list", TEST_BRANCH]:
                 return f"  {TEST_BRANCH}"
@@ -154,13 +175,19 @@ class TestWorktree(unittest.TestCase):
         expected = [
             call(["git", "branch", "--list", TEST_BRANCH], cwd=REPO_ROOT),
             call(["git", "worktree", "list", "--porcelain"], cwd=REPO_ROOT),
-            call(["git", "worktree", "add", WT_PATH, TEST_BRANCH], cwd=REPO_ROOT, stream=True),
+            call(
+                ["git", "worktree", "add", WT_PATH, TEST_BRANCH],
+                cwd=REPO_ROOT,
+                stream=True,
+            ),
         ]
         self.assertEqual(mock_run.call_args_list, expected)
 
     @patch("sys.stderr", new_callable=StringIO)
     @patch("os.path.exists", return_value=False)
-    def test_create_reuse_branch_already_checked_out(self, _exists, mock_stderr, mock_run, _repo_root, _repo_name):
+    def test_create_reuse_branch_already_checked_out(
+        self, _exists, mock_stderr, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "branch", "--list", TEST_BRANCH]:
                 return f"  {TEST_BRANCH}"
@@ -213,7 +240,9 @@ class TestWorktree(unittest.TestCase):
 
     @patch("sys.stdout", new_callable=StringIO)
     @patch("os.path.exists", return_value=True)
-    def test_open_missing_prints_hint(self, _exists, mock_stdout, mock_run, _repo_root, _repo_name):
+    def test_open_missing_prints_hint(
+        self, _exists, mock_stdout, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "worktree", "list", "--porcelain"]:
                 return ""
@@ -230,7 +259,9 @@ class TestWorktree(unittest.TestCase):
 
     @patch("sys.stderr", new_callable=StringIO)
     @patch("os.path.exists", return_value=False)
-    def test_open_broken_worktree_errors(self, _exists, mock_stderr, mock_run, _repo_root, _repo_name):
+    def test_open_broken_worktree_errors(
+        self, _exists, mock_stderr, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "worktree", "list", "--porcelain"]:
                 return porcelain_with_branch(TEST_BRANCH, WT_PATH)
@@ -269,7 +300,9 @@ class TestWorktree(unittest.TestCase):
     @patch("os.path.exists", return_value=True)
     @patch("builtins.input", return_value="y")
     @patch("os.getcwd", return_value="/somewhere/else")
-    def test_delete_with_delete_branch(self, _getcwd, _input, _exists, mock_run, _repo_root, _repo_name):
+    def test_delete_with_delete_branch(
+        self, _getcwd, _input, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "worktree", "list", "--porcelain"]:
                 return porcelain_with_branch(TEST_BRANCH, WT_PATH)
@@ -290,7 +323,9 @@ class TestWorktree(unittest.TestCase):
     @patch("os.path.exists", return_value=True)
     @patch("builtins.input", return_value="n")
     @patch("os.getcwd", return_value="/somewhere/else")
-    def test_delete_aborted(self, _getcwd, _input, _exists, mock_stdout, mock_run, _repo_root, _repo_name):
+    def test_delete_aborted(
+        self, _getcwd, _input, _exists, mock_stdout, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "worktree", "list", "--porcelain"]:
                 return porcelain_with_branch(TEST_BRANCH, WT_PATH)
@@ -310,7 +345,9 @@ class TestWorktree(unittest.TestCase):
     @patch("os.path.exists", return_value=True)
     @patch("os.getcwd", return_value="/somewhere/else")
     @patch("sys.stderr", new_callable=StringIO)
-    def test_delete_dirty_worktree_blocked(self, mock_stderr, _getcwd, _exists, mock_run, _repo_root, _repo_name):
+    def test_delete_dirty_worktree_blocked(
+        self, mock_stderr, _getcwd, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "worktree", "list", "--porcelain"]:
                 return porcelain_with_branch(TEST_BRANCH, WT_PATH)
@@ -334,7 +371,6 @@ class TestWorktree(unittest.TestCase):
 @patch("wt.worktree.get_repo_root", return_value=REPO_ROOT)
 @patch("wt.worktree.run")
 class TestStatusWorktree(unittest.TestCase):
-
     @patch("os.path.exists", return_value=True)
     @patch("sys.stdout", new_callable=StringIO)
     def test_status_clean(self, mock_stdout, _exists, mock_run, _repo_root, _repo_name):
@@ -383,7 +419,9 @@ class TestStatusWorktree(unittest.TestCase):
 
     @patch("os.path.exists", return_value=True)
     @patch("sys.stdout", new_callable=StringIO)
-    def test_status_no_worktree(self, mock_stdout, _exists, mock_run, _repo_root, _repo_name):
+    def test_status_no_worktree(
+        self, mock_stdout, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "rev-parse", "--abbrev-ref", "HEAD"]:
                 return TEST_BRANCH
@@ -405,7 +443,9 @@ class TestStatusWorktree(unittest.TestCase):
 
     @patch("os.path.exists", return_value=False)
     @patch("sys.stdout", new_callable=StringIO)
-    def test_status_broken_worktree(self, mock_stdout, _exists, mock_run, _repo_root, _repo_name):
+    def test_status_broken_worktree(
+        self, mock_stdout, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "rev-parse", "--abbrev-ref", "HEAD"]:
                 return TEST_BRANCH
@@ -427,7 +467,9 @@ class TestStatusWorktree(unittest.TestCase):
 
     @patch("os.path.exists", return_value=True)
     @patch("sys.stdout", new_callable=StringIO)
-    def test_status_explicit_branch_clean(self, mock_stdout, _exists, mock_run, _repo_root, _repo_name):
+    def test_status_explicit_branch_clean(
+        self, mock_stdout, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "worktree", "list", "--porcelain"]:
                 return porcelain_with_branch(TEST_BRANCH, WT_PATH)
@@ -449,7 +491,9 @@ class TestStatusWorktree(unittest.TestCase):
 
     @patch("os.path.exists", return_value=True)
     @patch("sys.stdout", new_callable=StringIO)
-    def test_status_explicit_branch_no_worktree(self, mock_stdout, _exists, mock_run, _repo_root, _repo_name):
+    def test_status_explicit_branch_no_worktree(
+        self, mock_stdout, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "worktree", "list", "--porcelain"]:
                 return ""
@@ -471,10 +515,11 @@ class TestStatusWorktree(unittest.TestCase):
 @patch("wt.worktree.get_repo_root", return_value=REPO_ROOT)
 @patch("wt.worktree.run")
 class TestDiscardWorktree(unittest.TestCase):
-
     @patch("sys.stdout", new_callable=StringIO)
     @patch("builtins.input", return_value="y")
-    def test_discard_dirty_confirmed(self, _input, mock_stdout, mock_run, _repo_root, _repo_name):
+    def test_discard_dirty_confirmed(
+        self, _input, mock_stdout, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "rev-parse", "--git-common-dir"]:
                 return "/repo/.git/worktrees/my-feature"
@@ -499,7 +544,9 @@ class TestDiscardWorktree(unittest.TestCase):
 
     @patch("sys.stdout", new_callable=StringIO)
     @patch("builtins.input", return_value="n")
-    def test_discard_dirty_aborted(self, _input, mock_stdout, mock_run, _repo_root, _repo_name):
+    def test_discard_dirty_aborted(
+        self, _input, mock_stdout, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "rev-parse", "--git-common-dir"]:
                 return "/repo/.git/worktrees/my-feature"
@@ -560,7 +607,9 @@ class TestDiscardWorktree(unittest.TestCase):
     @patch("os.path.exists", return_value=True)
     @patch("sys.stdout", new_callable=StringIO)
     @patch("builtins.input", return_value="y")
-    def test_discard_explicit_branch_confirmed(self, _input, mock_stdout, _exists, mock_run, _repo_root, _repo_name):
+    def test_discard_explicit_branch_confirmed(
+        self, _input, mock_stdout, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "worktree", "list", "--porcelain"]:
                 return porcelain_with_branch(TEST_BRANCH, WT_PATH)
@@ -583,7 +632,9 @@ class TestDiscardWorktree(unittest.TestCase):
 
     @patch("os.path.exists", return_value=True)
     @patch("sys.stdout", new_callable=StringIO)
-    def test_discard_explicit_branch_clean(self, mock_stdout, _exists, mock_run, _repo_root, _repo_name):
+    def test_discard_explicit_branch_clean(
+        self, mock_stdout, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "worktree", "list", "--porcelain"]:
                 return porcelain_with_branch(TEST_BRANCH, WT_PATH)
@@ -601,7 +652,9 @@ class TestDiscardWorktree(unittest.TestCase):
 
     @patch("os.path.exists", return_value=True)
     @patch("sys.stderr", new_callable=StringIO)
-    def test_discard_explicit_branch_no_worktree(self, mock_stderr, _exists, mock_run, _repo_root, _repo_name):
+    def test_discard_explicit_branch_no_worktree(
+        self, mock_stderr, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "worktree", "list", "--porcelain"]:
                 return ""
@@ -623,9 +676,10 @@ class TestDiscardWorktree(unittest.TestCase):
 @patch("wt.worktree.run")
 @patch("os.path.exists", return_value=True)
 class TestShowBranches(unittest.TestCase):
-
     @patch("sys.stdout", new_callable=StringIO)
-    def test_worktree_branches_at_top_then_others(self, mock_stdout, _exists, mock_run, _repo_root, _repo_name):
+    def test_worktree_branches_at_top_then_others(
+        self, mock_stdout, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "branch"]:
                 return "  feature-a\n  feature-b\n* main"
@@ -656,7 +710,9 @@ class TestShowBranches(unittest.TestCase):
         self.assertNotIn("[wt]", lines[2])
 
     @patch("sys.stdout", new_callable=StringIO)
-    def test_main_repo_not_shown_as_worktree(self, mock_stdout, _exists, mock_run, _repo_root, _repo_name):
+    def test_main_repo_not_shown_as_worktree(
+        self, mock_stdout, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "branch"]:
                 return "  feature-a\n* main"
@@ -685,7 +741,9 @@ class TestShowBranches(unittest.TestCase):
         self.assertIn("main", lines[1])
 
     @patch("sys.stdout", new_callable=StringIO)
-    def test_worktree_outside_home_still_marked(self, mock_stdout, _exists, mock_run, _repo_root, _repo_name):
+    def test_worktree_outside_home_still_marked(
+        self, mock_stdout, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "branch"]:
                 return "* main\n  feature-elsewhere"
@@ -707,12 +765,14 @@ class TestShowBranches(unittest.TestCase):
         show_branches()
 
         lines = mock_stdout.getvalue().splitlines()
-        wt_lines = [l for l in lines if "[wt]" in l]
+        wt_lines = [line for line in lines if "[wt]" in line]
         self.assertEqual(len(wt_lines), 1)
         self.assertIn("feature-elsewhere", wt_lines[0])
 
     @patch("sys.stdout", new_callable=StringIO)
-    def test_prunable_worktree_marked_as_broken(self, mock_stdout, _exists, mock_run, _repo_root, _repo_name):
+    def test_prunable_worktree_marked_as_broken(
+        self, mock_stdout, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "branch"]:
                 return "* main\n  stale"
@@ -739,7 +799,9 @@ class TestShowBranches(unittest.TestCase):
         self.assertIn("stale", output)
 
     @patch("sys.stdout", new_callable=StringIO)
-    def test_branch_without_worktree_has_no_wt_tag(self, mock_stdout, _exists, mock_run, _repo_root, _repo_name):
+    def test_branch_without_worktree_has_no_wt_tag(
+        self, mock_stdout, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "branch"]:
                 return "* solo-branch"
@@ -753,12 +815,14 @@ class TestShowBranches(unittest.TestCase):
         show_branches()
 
         output = mock_stdout.getvalue()
-        branch_lines = [l for l in output.splitlines() if "solo-branch" in l]
+        branch_lines = [line for line in output.splitlines() if "solo-branch" in line]
         self.assertEqual(len(branch_lines), 1)
         self.assertNotIn("[wt]", branch_lines[0])
 
     @patch("sys.stdout", new_callable=StringIO)
-    def test_plus_prefix_branches_parsed_correctly(self, mock_stdout, _exists, mock_run, _repo_root, _repo_name):
+    def test_plus_prefix_branches_parsed_correctly(
+        self, mock_stdout, _exists, mock_run, _repo_root, _repo_name
+    ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "branch"]:
                 return "* main\n+ feature-wt\n  feature-plain"

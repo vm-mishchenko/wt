@@ -17,6 +17,7 @@ def _run_git(*args):
         raise NotARepoError("not inside a git repository")
     return result.stdout.strip()
 
+
 WORKTREE_BASE_DIR = Path.home() / ".wt"
 
 # Fallback base branch for projects not listed in PROJECTS
