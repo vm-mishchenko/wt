@@ -20,16 +20,6 @@ def _run_git(*args):
 
 WORKTREE_BASE_DIR = Path.home() / ".wt"
 
-# Fallback base branch for projects not listed in PROJECTS
-DEFAULT_BRANCH = "main"
-
-PROJECTS = {
-    "mms": {
-        # Branch used as base when creating new worktrees (e.g. "wt create my-feature")
-        "default_branch": "master",
-    },
-}
-
 
 def get_main_repo_name():
     git_common_dir = Path(_run_git("rev-parse", "--git-common-dir")).resolve()
@@ -40,15 +30,6 @@ def get_main_repo_name():
 
 def get_repo_root():
     return _run_git("rev-parse", "--show-toplevel")
-
-
-def get_project_config():
-    name = get_main_repo_name()
-    return PROJECTS.get(name, {})
-
-
-def get_default_branch():
-    return get_project_config().get("default_branch", DEFAULT_BRANCH)
 
 
 def worktree_path(branch):

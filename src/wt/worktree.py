@@ -3,6 +3,7 @@ import subprocess
 import sys
 
 from .config import get_repo_root, worktree_path
+from .prepare import PrepareError, load_configs, run_prepare
 
 YELLOW = "\033[1;33m"
 RED = "\033[0;31m"
@@ -177,6 +178,7 @@ def show_branches():
 def create_worktree(branch, from_branch=None):
     repo_root = get_repo_root()
     path = str(worktree_path(branch))
+    global_cmds, repo_cmds = load_configs(main_repo=main_repo_path())
 
     if os.path.exists(path):
         print(
@@ -200,6 +202,7 @@ def create_worktree(branch, from_branch=None):
                 file=sys.stderr,
             )
             sys.exit(1)
+        base = from_branch
         print(f"{YELLOW}Creating branch '{branch}' from '{from_branch}'...{NC}")
         run(
             ["git", "worktree", "add", "-b", branch, path, from_branch],
@@ -224,6 +227,12 @@ def create_worktree(branch, from_branch=None):
             cwd=repo_root,
             stream=True,
         )
+
+    try:
+        run_prepare(path, branch, global_cmds, repo_cmds)
+    except PrepareError as e:
+        print(f"{RED}Error: {e}{NC}", file=sys.stderr)
+        sys.exit(1)
 
     print(f"Worktree created at {path}")
 

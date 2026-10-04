@@ -73,9 +73,10 @@ class TestWorktree(unittest.TestCase):
         self.assertIn("stale", lines[2])
         self.assertIn("(missing)", lines[2])
 
+    @patch("wt.worktree.load_configs", return_value=([], []))
     @patch("os.path.exists", return_value=False)
     def test_create_new_branch_from_main(
-        self, _exists, mock_run, _repo_root, _repo_name
+        self, _exists, _cfg, mock_run, _repo_root, _repo_name
     ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "branch", "--list", "main"]:
@@ -86,6 +87,7 @@ class TestWorktree(unittest.TestCase):
         create_worktree(TEST_BRANCH)
 
         expected = [
+            call(GIT_COMMON_DIR_CMD, cwd=REPO_ROOT),
             call(["git", "branch", "--list", TEST_BRANCH], cwd=REPO_ROOT),
             call(["git", "branch", "--list", "main"], cwd=REPO_ROOT),
             call(
@@ -96,9 +98,10 @@ class TestWorktree(unittest.TestCase):
         ]
         self.assertEqual(mock_run.call_args_list, expected)
 
+    @patch("wt.worktree.load_configs", return_value=([], []))
     @patch("os.path.exists", return_value=False)
     def test_create_new_branch_from_master_fallback(
-        self, _exists, mock_run, _repo_root, _repo_name
+        self, _exists, _cfg, mock_run, _repo_root, _repo_name
     ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "branch", "--list", "main"]:
@@ -111,6 +114,7 @@ class TestWorktree(unittest.TestCase):
         create_worktree(TEST_BRANCH)
 
         expected = [
+            call(GIT_COMMON_DIR_CMD, cwd=REPO_ROOT),
             call(["git", "branch", "--list", TEST_BRANCH], cwd=REPO_ROOT),
             call(["git", "branch", "--list", "main"], cwd=REPO_ROOT),
             call(["git", "branch", "--list", "master"], cwd=REPO_ROOT),
@@ -135,9 +139,10 @@ class TestWorktree(unittest.TestCase):
         self.assertEqual(ctx.exception.code, 1)
         self.assertIn("neither 'main' nor 'master'", mock_stderr.getvalue())
 
+    @patch("wt.worktree.load_configs", return_value=([], []))
     @patch("os.path.exists", return_value=False)
     def test_create_new_branch_from_base(
-        self, _exists, mock_run, _repo_root, _repo_name
+        self, _exists, _cfg, mock_run, _repo_root, _repo_name
     ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "branch", "--list", "feature/base"]:
@@ -148,6 +153,7 @@ class TestWorktree(unittest.TestCase):
         create_worktree(TEST_BRANCH, from_branch="feature/base")
 
         expected = [
+            call(GIT_COMMON_DIR_CMD, cwd=REPO_ROOT),
             call(["git", "branch", "--list", TEST_BRANCH], cwd=REPO_ROOT),
             call(["git", "branch", "--list", "feature/base"], cwd=REPO_ROOT),
             call(
@@ -158,9 +164,10 @@ class TestWorktree(unittest.TestCase):
         ]
         self.assertEqual(mock_run.call_args_list, expected)
 
+    @patch("wt.worktree.load_configs", return_value=([], []))
     @patch("os.path.exists", return_value=False)
     def test_create_reuse_existing_branch(
-        self, _exists, mock_run, _repo_root, _repo_name
+        self, _exists, _cfg, mock_run, _repo_root, _repo_name
     ):
         def side_effect(cmd, cwd=None, stream=False):
             if cmd == ["git", "branch", "--list", TEST_BRANCH]:
@@ -173,6 +180,7 @@ class TestWorktree(unittest.TestCase):
         create_worktree(TEST_BRANCH)
 
         expected = [
+            call(GIT_COMMON_DIR_CMD, cwd=REPO_ROOT),
             call(["git", "branch", "--list", TEST_BRANCH], cwd=REPO_ROOT),
             call(["git", "worktree", "list", "--porcelain"], cwd=REPO_ROOT),
             call(

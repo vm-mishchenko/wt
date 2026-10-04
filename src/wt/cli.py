@@ -2,6 +2,7 @@ import argparse
 import sys
 
 from .config import NotARepoError
+from .prepare import WT_ENV_VARS, ConfigError, init_repo_config
 from .worktree import (
     create_worktree,
     delete_worktree,
@@ -13,7 +14,13 @@ from .worktree import (
 
 
 def main():
-    parser = argparse.ArgumentParser(prog="wt", description="Manage git worktrees")
+    env_help = "\n".join(f"  {var}  {desc}" for var, desc in WT_ENV_VARS.items())
+    parser = argparse.ArgumentParser(
+        prog="wt",
+        description="Manage git worktrees",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=("Environment variables (can use in .wt/config.yaml):\n" + env_help),
+    )
     subparsers = parser.add_subparsers(dest="command")
 
     FMT = argparse.RawDescriptionHelpFormatter
@@ -128,12 +135,23 @@ def main():
         help="Branch name (defaults to current worktree)",
     )
 
+    subparsers.add_parser(
+        "init",
+        help="Create a .wt/config.yaml skeleton in the repo root",
+        formatter_class=FMT,
+        description="Create a .wt/config.yaml skeleton in the repo root (never overwrites).",
+        epilog="examples:\n  wt init",
+    )
+
     args = parser.parse_args()
 
     try:
         _run_command(args)
     except NotARepoError:
         print("error: not inside a git repository", file=sys.stderr)
+        sys.exit(1)
+    except ConfigError as e:
+        print(f"{e}", file=sys.stderr)
         sys.exit(1)
 
 
@@ -154,6 +172,8 @@ def _run_command(args):
         status_worktree(args.branch)
     elif args.command == "discard":
         discard_worktree(args.branch)
+    elif args.command == "init":
+        init_repo_config()
 
 
 if __name__ == "__main__":
