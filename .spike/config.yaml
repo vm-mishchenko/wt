@@ -1,0 +1,3 @@
+checks:
+  - cmd: make lint
+    name: lint
