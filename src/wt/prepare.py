@@ -88,8 +88,10 @@ def run_prepare(worktree, branch, global_cmds, repo_cmds):
     env["WT_WORKTREE"] = str(worktree)
     env["WT_BRANCH"] = branch
 
-    for name, cmd in [*global_cmds, *repo_cmds]:
-        print(f"{YELLOW}prepare: {name}{NC}")
+    steps = [*global_cmds, *repo_cmds]
+    total = len(steps)
+    for i, (name, cmd) in enumerate(steps, 1):
+        print(f"{YELLOW}[{i}/{total}] {name}{NC}")
         result = subprocess.run(
             cmd,
             shell=True,
