@@ -57,9 +57,11 @@ def main():
         description="Delete worktree, keep the branch by default.",
         epilog="examples:\n"
                "  wt delete my-feature                  delete worktree, keep branch\n"
-               "  wt delete my-feature --delete-branch   delete worktree and branch")
+               "  wt delete my-feature --branch          delete worktree and branch\n"
+               "  wt delete my-feature --force           skip uncommitted-changes check")
     delete_parser.add_argument("branch", help="Branch name of the worktree to delete")
-    delete_parser.add_argument("--delete-branch", action="store_true", help="Also delete the branch")
+    delete_parser.add_argument("--branch", "-b", dest="delete_branch", action="store_true", help="Also delete the branch")
+    delete_parser.add_argument("--force", "-f", action="store_true", help="Delete even if there are uncommitted changes")
 
     status_parser = subparsers.add_parser("status",
         help="Show worktree status (uncommitted changes, your commits)",
@@ -102,7 +104,7 @@ def _run_command(args):
     elif args.command == "open":
         open_worktree(args.branch, editor=args.editor)
     elif args.command == "delete":
-        delete_worktree(args.branch, args.delete_branch)
+        delete_worktree(args.branch, args.delete_branch, force=args.force)
     elif args.command == "status":
         status_worktree(args.branch)
     elif args.command == "discard":

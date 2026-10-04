@@ -116,17 +116,17 @@ Shows what will be discarded and prompts for confirmation before running `git re
 
 ### wt delete
 
-Remove a worktree. The branch is kept by default; pass `--delete-branch` to also drop the local branch.
+Remove a worktree. The branch is kept by default; pass `--branch` to also drop the local branch.
 
 ```
 wt delete my-feature
-wt delete my-feature --delete-branch
+wt delete my-feature --branch
 ```
 
 Arguments
 
 - `branch` — branch name of the worktree to remove (required)
-- `--delete-branch` — also delete the local branch via `git branch -D`
+- `--branch` — also delete the local branch via `git branch -D`
 
 Blocks deletion when the worktree has uncommitted changes; suggests `wt discard <branch>` first. Refuses to run while you are inside the worktree itself. Broken worktrees (git tracks them but the directory is missing) skip the dirty-changes check and just clean up git's metadata.
 

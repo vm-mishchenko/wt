@@ -292,7 +292,7 @@ def discard_worktree(branch=None):
     print(f"Discarded {total} file(s) ({modified} modified, {untracked} untracked)")
 
 
-def delete_worktree(branch, delete_branch=False):
+def delete_worktree(branch, delete_branch=False, force=False):
     repo_root = get_repo_root()
     info = worktree_branches().get(branch)
     if info is None:
@@ -304,7 +304,7 @@ def delete_worktree(branch, delete_branch=False):
         print(f"{RED}Error: cannot delete worktree while inside it{NC}", file=sys.stderr)
         sys.exit(1)
 
-    if info["exists"]:
+    if info["exists"] and not force:
         print(f"{YELLOW}Checking for uncommitted changes...{NC}")
         try:
             status = run(["git", "status", "--porcelain"], cwd=path)
