@@ -393,7 +393,15 @@ def delete_worktree(branch, delete_branch=False, force=False):
     if force:
         cmd.append("--force")
     cmd.append(path)
-    run(cmd, cwd=repo_root, stream=True)
+    try:
+        run(cmd, cwd=repo_root, stream=True)
+    except RuntimeError:
+        # git may leave untracked files (node_modules, symlinks) behind and
+        # fail with "Directory not empty"; remove the directory ourselves
+        # and prune the stale registration.
+        if os.path.exists(path):
+            run(["rm", "-rf", path], cwd=repo_root, stream=True)
+        run(["git", "worktree", "prune"], cwd=repo_root, stream=True)
 
     if delete_branch:
         print(f"{YELLOW}Deleting branch '{branch}'...{NC}")
