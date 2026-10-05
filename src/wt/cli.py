@@ -27,6 +27,7 @@ def main():
 
     subparsers.add_parser(
         "list",
+        aliases=["l"],
         help="Show all worktrees (flat list)",
         formatter_class=FMT,
         description="Show all worktrees (flat list).",
@@ -35,6 +36,7 @@ def main():
 
     create_parser = subparsers.add_parser(
         "create",
+        aliases=["c"],
         help="Create worktree with new branch from main/master (or reuse existing branch)",
         formatter_class=FMT,
         description="Create worktree with new branch from main or master (whichever exists), or reuse an existing branch.",
@@ -52,6 +54,7 @@ def main():
 
     open_parser = subparsers.add_parser(
         "open",
+        aliases=["o"],
         help="Open existing worktree in an editor (VS Code by default)",
         formatter_class=FMT,
         description="Open existing worktree in an editor (VS Code by default).",
@@ -80,6 +83,7 @@ def main():
 
     delete_parser = subparsers.add_parser(
         "delete",
+        aliases=["d"],
         help="Delete worktree, keep the branch",
         formatter_class=FMT,
         description="Delete worktree, keep the branch by default.",
@@ -105,6 +109,7 @@ def main():
 
     status_parser = subparsers.add_parser(
         "status",
+        aliases=["s"],
         help="Show worktree status (uncommitted changes, your commits)",
         formatter_class=FMT,
         description="Show worktree status for the current branch or a specific branch.",
