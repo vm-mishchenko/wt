@@ -397,11 +397,18 @@ def delete_worktree(branch, delete_branch=False, force=False):
         run(cmd, cwd=repo_root, stream=True)
     except RuntimeError:
         # git may leave untracked files (node_modules, symlinks) behind and
-        # fail with "Directory not empty"; remove the directory ourselves
-        # and prune the stale registration.
-        if os.path.exists(path):
-            run(["rm", "-rf", path], cwd=repo_root, stream=True)
-        run(["git", "worktree", "prune"], cwd=repo_root, stream=True)
+        # fail with "Directory not empty"; tell the user how to clean up.
+        print(
+            f"{RED}Error: git could not fully remove the worktree "
+            f"(leftover untracked files).{NC}",
+            file=sys.stderr,
+        )
+        print(
+            f"\nClean it up manually, then re-run this command:\n"
+            f"  rm -rf {path} && git worktree prune\n",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
     if delete_branch:
         print(f"{YELLOW}Deleting branch '{branch}'...{NC}")
