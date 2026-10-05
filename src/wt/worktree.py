@@ -389,7 +389,11 @@ def delete_worktree(branch, delete_branch=False, force=False):
         run(["git", "worktree", "unlock", path], cwd=repo_root, stream=True)
 
     print(f"{YELLOW}Deleting worktree at {path}...{NC}")
-    run(["git", "worktree", "remove", path], cwd=repo_root, stream=True)
+    cmd = ["git", "worktree", "remove"]
+    if force:
+        cmd.append("--force")
+    cmd.append(path)
+    run(cmd, cwd=repo_root, stream=True)
 
     if delete_branch:
         print(f"{YELLOW}Deleting branch '{branch}'...{NC}")
