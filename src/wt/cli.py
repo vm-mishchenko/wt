@@ -32,7 +32,7 @@ def main():
         formatter_class=FMT,
         description="Show all worktrees (flat list).",
         epilog="examples:\n  wt list",
-    )
+    ).set_defaults(run=_run_list)
 
     create_parser = subparsers.add_parser(
         "create",
@@ -51,6 +51,7 @@ def main():
         dest="from_branch",
         help="Base branch to create the new branch from (overrides main/master default)",
     )
+    create_parser.set_defaults(run=_run_create)
 
     open_parser = subparsers.add_parser(
         "open",
@@ -80,6 +81,7 @@ def main():
         help="Open in Cursor",
     )
     open_parser.set_defaults(editor="vscode")
+    open_parser.set_defaults(run=_run_open)
 
     delete_parser = subparsers.add_parser(
         "delete",
@@ -106,6 +108,7 @@ def main():
         action="store_true",
         help="Delete even if there are uncommitted changes",
     )
+    delete_parser.set_defaults(run=_run_delete)
 
     status_parser = subparsers.add_parser(
         "status",
@@ -123,6 +126,7 @@ def main():
         default=None,
         help="Branch name (defaults to current branch)",
     )
+    status_parser.set_defaults(run=_run_status)
 
     discard_parser = subparsers.add_parser(
         "discard",
@@ -139,6 +143,7 @@ def main():
         default=None,
         help="Branch name (defaults to current worktree)",
     )
+    discard_parser.set_defaults(run=_run_discard)
 
     subparsers.add_parser(
         "init",
@@ -146,7 +151,9 @@ def main():
         formatter_class=FMT,
         description="Create a .wt/config.yaml skeleton in the repo root (never overwrites).",
         epilog="examples:\n  wt init",
-    )
+    ).set_defaults(run=_run_init)
+
+    parser.set_defaults(run=_run_list)
 
     args = parser.parse_args()
 
@@ -160,25 +167,36 @@ def main():
         sys.exit(1)
 
 
-def _run_command(args):
-    if args.command is None:
-        show_branches()
-        return
+def _run_list(args):
+    show_branches()
 
-    if args.command == "list":
-        show_branches()
-    elif args.command == "create":
-        create_worktree(args.branch, args.from_branch)
-    elif args.command == "open":
-        open_worktree(args.branch, editor=args.editor)
-    elif args.command == "delete":
-        delete_worktree(args.branch, args.delete_branch, force=args.force)
-    elif args.command == "status":
-        status_worktree(args.branch)
-    elif args.command == "discard":
-        discard_worktree(args.branch)
-    elif args.command == "init":
-        init_repo_config()
+
+def _run_create(args):
+    create_worktree(args.branch, args.from_branch)
+
+
+def _run_open(args):
+    open_worktree(args.branch, editor=args.editor)
+
+
+def _run_delete(args):
+    delete_worktree(args.branch, args.delete_branch, force=args.force)
+
+
+def _run_status(args):
+    status_worktree(args.branch)
+
+
+def _run_discard(args):
+    discard_worktree(args.branch)
+
+
+def _run_init(args):
+    init_repo_config()
+
+
+def _run_command(args):
+    args.run(args)
 
 
 if __name__ == "__main__":
