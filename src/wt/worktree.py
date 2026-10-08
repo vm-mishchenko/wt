@@ -142,7 +142,54 @@ wt() {
     command wt "$@"
   fi
 }
+_wt() {
+  local -a branches cmds
+  if (( CURRENT == 2 )); then
+    cmds=(
+      'list:show all branches'
+      'create:create a worktree'
+      'cd:cd into a worktree'
+      'open:open a worktree in an editor'
+      'status:show worktree status'
+      'delete:delete a worktree'
+      'discard:discard uncommitted changes'
+      'init:create repo config or print shell code'
+    )
+    _describe -t commands command cmds
+  else
+    branches=(${(f)"$(command wt complete "${words[2]}" 2>/dev/null)"})
+    (( ${#branches} )) && _describe -t branches branch branches
+  fi
+}
+compdef _wt wt
 """
+
+WORKTREE_BRANCH_COMMANDS = ("cd", "open", "delete", "discard")
+
+COMMAND_ALIASES = {
+    "l": "list",
+    "c": "create",
+    "o": "open",
+    "d": "delete",
+    "s": "status",
+}
+
+
+def complete_branches(subcommand=None):
+    """Branch candidates for shell completion, one per caller's subcommand."""
+    try:
+        cmd = COMMAND_ALIASES.get(subcommand, subcommand)
+        if cmd in WORKTREE_BRANCH_COMMANDS:
+            infos = worktree_branches()
+            return sorted(b for b, i in infos.items() if i["exists"])
+        if cmd == "status":
+            return sorted(set(local_branches()[0]))
+        if cmd == "create":
+            infos = worktree_branches()
+            return sorted(b for b in local_branches()[0] if b not in infos)
+        return []
+    except Exception:
+        return []
 
 
 def cd_worktree(branch=None):
@@ -208,9 +255,8 @@ def list_worktrees():
         print(f"{b}{suffix}")
 
 
-def show_branches():
+def local_branches():
     repo_root = get_repo_root()
-
     branch_output = run(["git", "branch"], cwd=repo_root)
     branches = []
     current_branch = None
@@ -225,7 +271,11 @@ def show_branches():
             branches.append(line[2:].strip())
         else:
             branches.append(line.strip())
+    return branches, current_branch
 
+
+def show_branches():
+    branches, current_branch = local_branches()
     wt_branches = worktree_branches()
 
     with_wt = sorted(b for b in branches if b in wt_branches)

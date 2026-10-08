@@ -86,6 +86,20 @@ wt list                 unchanged, runs the binary
 
 `wt init zsh` prints a small zsh function; `eval` defines it in your shell. The function checks the first argument: for `wt cd` it runs the binary, captures the printed path, and runs `cd` itself — the only way your shell can actually move. Every other `wt` invocation passes straight through to the binary via `command wt`. Running `wt init zsh` directly just prints the function; it does not modify any files.
 
+#### Tab completion
+
+The same eval line also sets up Tab completion:
+
+```shell
+wt <tab>                 command names
+wt cd <tab>              branches with a worktree
+wt open <tab>            branches with a worktree
+wt status <tab>          all local branches
+wt create <tab>          local branches without a worktree (the reuse path)
+wt delete <tab>          branches with a worktree
+wt discard <tab>         branches with a worktree
+```
+
 ### wt list
 
 Print every local branch. Branches that have a worktree are listed first with a `[wt]` tag; branches whose worktree directory is gone get a red `[wt!]` tag. The current branch is shown in blue. Bare `wt` does the same thing.

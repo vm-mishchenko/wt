@@ -6,6 +6,7 @@ from .prepare import WT_ENV_VARS, ConfigError, init_repo_config
 from .worktree import (
     SHELL_INTEGRATION_ZSH,
     cd_worktree,
+    complete_branches,
     create_worktree,
     delete_worktree,
     discard_worktree,
@@ -187,6 +188,14 @@ def main():
     )
     init_parser.set_defaults(run=_run_init)
 
+    complete_parser = subparsers.add_parser(
+        "complete",
+        help=argparse.SUPPRESS,
+        description=argparse.SUPPRESS,
+    )
+    complete_parser.add_argument("subcommand", nargs="?", default=None)
+    complete_parser.set_defaults(run=_run_complete)
+
     parser.set_defaults(run=_run_list)
 
     args = parser.parse_args()
@@ -227,6 +236,14 @@ def _run_discard(args):
 
 def _run_cd(args):
     cd_worktree(args.branch)
+
+
+def _run_complete(args):
+    try:
+        for name in complete_branches(args.subcommand):
+            print(name)
+    except Exception:
+        pass
 
 
 def _run_init(args):
