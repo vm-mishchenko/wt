@@ -4,6 +4,8 @@ import sys
 from .config import NotARepoError
 from .prepare import WT_ENV_VARS, ConfigError, init_repo_config
 from .worktree import (
+    SHELL_INTEGRATION_ZSH,
+    cd_worktree,
     create_worktree,
     delete_worktree,
     discard_worktree,
@@ -128,6 +130,25 @@ def main():
     )
     status_parser.set_defaults(run=_run_status)
 
+    cd_parser = subparsers.add_parser(
+        "cd",
+        help="Print a worktree path; with no branch, pick interactively via fzf. "
+        'cd\'s your shell when used through the wrapper: eval "$(wt init zsh)"',
+        formatter_class=FMT,
+        description="Print a worktree path for cd-ing. With no branch, shows an "
+        'interactive fzf picker. Pair with the shell wrapper: eval "$(wt init zsh)"',
+        epilog="examples:\n"
+        "  wt cd my-feature      print path of my-feature's worktree\n"
+        "  wt cd                 fzf picker over all worktrees",
+    )
+    cd_parser.add_argument(
+        "branch",
+        nargs="?",
+        default=None,
+        help="Branch name of the worktree (omit to pick interactively)",
+    )
+    cd_parser.set_defaults(run=_run_cd)
+
     discard_parser = subparsers.add_parser(
         "discard",
         help="Discard all uncommitted changes in current worktree",
@@ -145,13 +166,26 @@ def main():
     )
     discard_parser.set_defaults(run=_run_discard)
 
-    subparsers.add_parser(
+    init_parser = subparsers.add_parser(
         "init",
-        help="Create a .wt/config.yaml skeleton in the repo root",
+        help="Create a .wt/config.yaml skeleton in the repo root; "
+        "`wt init zsh` prints shell integration code instead",
         formatter_class=FMT,
-        description="Create a .wt/config.yaml skeleton in the repo root (never overwrites).",
-        epilog="examples:\n  wt init",
-    ).set_defaults(run=_run_init)
+        description="Without arguments, create a .wt/config.yaml skeleton in the "
+        "repo root (never overwrites). With a shell name, print the shell "
+        "integration code meant for eval in your shell config.",
+        epilog="examples:\n"
+        "  wt init               create .wt/config.yaml skeleton\n"
+        '  eval "$(wt init zsh)" enable wt cd in your shell',
+    )
+    init_parser.add_argument(
+        "shell",
+        nargs="?",
+        default=None,
+        choices=["zsh"],
+        help="Print shell integration code for the given shell",
+    )
+    init_parser.set_defaults(run=_run_init)
 
     parser.set_defaults(run=_run_list)
 
@@ -191,8 +225,15 @@ def _run_discard(args):
     discard_worktree(args.branch)
 
 
+def _run_cd(args):
+    cd_worktree(args.branch)
+
+
 def _run_init(args):
-    init_repo_config()
+    if args.shell == "zsh":
+        print(SHELL_INTEGRATION_ZSH, end="")
+    else:
+        init_repo_config()
 
 
 def _run_command(args):

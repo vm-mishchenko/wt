@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import sys
 
@@ -125,6 +126,74 @@ def worktree_branches():
     flush()
 
     return entries
+
+
+SHELL_INTEGRATION_ZSH = """\
+# wt shell integration: eval "$(wt init zsh)"
+wt() {
+  if [[ $1 == cd ]]; then
+    shift
+    local dir
+    dir=$(command wt cd "$@") || return 1
+    if [[ -n $dir ]]; then
+      cd "$dir" || return 1
+    fi
+  else
+    command wt "$@"
+  fi
+}
+"""
+
+
+def cd_worktree(branch=None):
+    if branch is None:
+        branch = _pick_worktree()
+        if branch is None:
+            sys.exit(1)
+    info = worktree_branches().get(branch)
+    if info is None:
+        print(f"{RED}Error: no worktree for branch '{branch}'{NC}", file=sys.stderr)
+        print(f"Hint: create it with: wt create {branch}", file=sys.stderr)
+        sys.exit(1)
+    if not info["exists"]:
+        print(
+            f"{RED}Error: git tracks a worktree at {info['path']} but the directory is missing{NC}",
+            file=sys.stderr,
+        )
+        print("Hint: prune it with: git worktree prune", file=sys.stderr)
+        sys.exit(1)
+    print(info["path"])
+
+
+def _pick_worktree():
+    infos = {b: i for b, i in sorted(worktree_branches().items()) if i["exists"]}
+    if not infos:
+        print("No worktrees to pick from", file=sys.stderr)
+        print("Hint: create one with: wt create <branch>", file=sys.stderr)
+        return None
+    if shutil.which("fzf") is None:
+        print(
+            "Error: fzf is required for the interactive picker (brew install fzf),",
+            file=sys.stderr,
+        )
+        print("or pass a branch explicitly: wt cd <branch>", file=sys.stderr)
+        return None
+    listing = "\n".join(f"{b}\t{i['path']}" for b, i in infos.items())
+    picked = subprocess.run(
+        [
+            "fzf",
+            "--delimiter=\\t",
+            "--with-nth=1",
+            "--preview",
+            "git -C {2} status -sb 2>/dev/null || ls {2}",
+        ],
+        input=listing,
+        capture_output=True,
+        text=True,
+    )
+    if picked.returncode != 0:
+        return None
+    return picked.stdout.strip().split("\t")[0]
 
 
 def resolve_worktree_path(branch):

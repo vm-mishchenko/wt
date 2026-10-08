@@ -11,6 +11,7 @@ wt create my-feature
 - [Requirements](#requirements)
 - [Install](#install)
 - [Commands](#commands)
+- [Shell integration](#shell-integration)
 - [Layout](#layout)
 
 ## Install
@@ -35,10 +36,55 @@ Other targets:
 - `wt` — list all branches, mark the ones that have a worktree
 - `wt list` — same as bare `wt`
 - `wt create` — create a worktree at `~/.wt/<project>/<branch>`
+- `wt cd` — print a worktree path; with no branch, pick interactively via fzf
 - `wt open` — open an existing worktree in an editor (VS Code by default, `--cursor` for Cursor)
 - `wt status` — show git-tracking and on-disk state for one worktree
 - `wt discard` — discard uncommitted changes in a worktree
 - `wt delete` — remove a worktree, optionally drop the branch too
+- `wt init` — create a `.wt/config.yaml` skeleton in the repo root; `wt init zsh` prints shell integration code
+
+### wt cd
+
+Print the worktree path for a branch. A normal command can't move your shell, so pair it with the [shell integration](#shell-integration); without it you can still do `cd "$(wt cd my-feature)"`.
+
+```
+wt cd my-feature        print path of my-feature's worktree
+wt cd                   interactive fzf picker over all worktrees
+```
+
+Arguments
+
+- `branch` — branch name of the worktree; omit to pick from an fzf list (requires `fzf`, shows a `git status` preview per entry)
+
+### Shell integration
+
+Required for `wt cd` to move your shell (a normal command can only print a path — see how it works [below](#how-it-works)).
+
+Add one line to the end of `~/.zshrc`:
+
+```shell
+echo 'eval "$(wt init zsh)"' >> ~/.zshrc
+```
+
+Then reload the config, or just open a new terminal:
+
+```shell
+source ~/.zshrc
+```
+
+The line re-runs on every shell start and re-defines the `wt` function from the installed binary, so it never needs updating when `wt` changes. There is always exactly one definition — nothing accumulates.
+
+This defines a `wt` function so that `wt cd` moves your shell, while every other `wt` command passes through to the binary unchanged:
+
+```shell
+wt cd my-feature        you are now in the worktree
+wt cd                   fzf picker, Enter to cd
+wt list                 unchanged, runs the binary
+```
+
+#### How it works
+
+`wt init zsh` prints a small zsh function; `eval` defines it in your shell. The function checks the first argument: for `wt cd` it runs the binary, captures the printed path, and runs `cd` itself — the only way your shell can actually move. Every other `wt` invocation passes straight through to the binary via `command wt`. Running `wt init zsh` directly just prints the function; it does not modify any files.
 
 ### wt list
 
